@@ -1,60 +1,53 @@
 import java.io.IOException;
 import java.util.concurrent.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.*;
 
 public class Pi {
-	public static int x = 0;
-	public static int y = 0;
-	
-	//passed arguments
-	public static int num_iteration = 0;
-	public static int num_threads = 0;
-	
-	public static int iteration = 0;
-	public static int inside = 0;
-	
-	public static void main(String[] args) throws IOException {
-		num_threads = Integer.parseInt(args[0]);
-		num_iteration = Integer.parseInt(args[1]);
+	public static AtomicLong threadCount = new AtomicLong(0);    
+	    
+	    public void monteCarloCalc(long num_threads, long num_iterations) {
+	    final long multRatio = num_iterations / num_threads;
+		Thread[] threadsArray = new Thread[(int) num_threads];
 		
-		Thread[] threadArray = new Thread[num_threads];
-		
-		for (int i = 0; i<num_threads ; i++) {
-			threadArray[i] = new Thread(() -> 
-				{
-					//double x = ThreadLocalRandom.current().nextDouble(0,1);
-					//double y = ThreadLocalRandom.current().nextDouble(0,1);
-					System.out.println("Inside thread.");
-					double x = Math.random();
-					double y = Math.random();
-					
-					if(((x*x)+(y*y)) < 1) {
-						inside++;
-					}
-					iteration++;
-				});
+		for (int j = 0; j < threadsArray.length; j++) {
+		    threadsArray[j] = new Thread(() -> {
+			    int currentCount = 0;
+			    int inside = 0;
+		while (currentCount++ < multRatio) {
+				double x = ThreadLocalRandom.current().nextDouble(1);
+				double y = ThreadLocalRandom.current().nextDouble(1);
+				if ((x*x)+(y*y) < 1) 
+				    inside++;
+			    }
+			    threadCount.addAndGet(inside);
+			});
 		}
 		
-		
-		
-		
-		for(int i = 0; i < (num_iteration/num_threads); i++) {
-			
-			for (Thread t : threadArray) t.start();
-			
-			try {
-				for (Thread t : threadArray) t.join();
-			} catch (InterruptedException iex) {}	
+		for (int j = 0; j < threadsArray.length; j++) 
+		    threadsArray[j].start();
+		for (int j = 0; j < threadsArray.length; j++) {
+		    try {
+			threadsArray[j].join();
+		    } catch (Exception ex) { }
 		}
-
-		int ratio = (inside/num_iteration);
-		int pi = ratio*4;
-		System.out.println("Total = " + iteration);
-		System.out.println("Inside = " + inside);
-		System.out.println("Ratio = " + ratio);
-		System.out.println("Pi = " + pi);
 		
+		long insideCount = threadCount.get();
+		double ratio = (double) insideCount / num_iterations;
 		
+		System.out.println("Total  = " + num_iterations);
+		System.out.println("Inside = " + insideCount);
+		System.out.println("Ratio  = " + ratio);
+		System.out.println("Pi     = " + (ratio * 4));
+ }
+	    
+	public static void main(String[] args) throws IOException, InterruptedException {
+		long num_threads = Long.parseLong(args[0]);
+		long num_iteration = Long.parseLong(args[1]);
+		
+		Pi calculation = new Pi();
+		calculation.monteCarloCalc(num_threads, num_iteration);
 		
 	}
 }
