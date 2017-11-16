@@ -9,7 +9,7 @@ public class Pi {
 	    
 	    public void monteCarloCalc(long num_threads, long num_iterations) {
 		//this is the amount of times the thread is allowed to do calculations
-	    final long multRatio = num_iterations / num_threads;
+	    long multRatio = num_iterations / num_threads;
 		//thread array 
 		Thread[] threadsArray = new Thread[(int) num_threads];
 		for (int i = 0; i < threadsArray.length; i++) {
